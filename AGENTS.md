@@ -1,6 +1,7 @@
-# Almat MLM API — Agent Instructions
+# mlm-api — Agent Instructions
 
-Backend workspace: **.NET 10** ASP.NET Core Web API.
+Backend application **mlm-api** (.NET 10 ASP.NET Core Web API).  
+Repo / local folder: `almat-mlm-api` (имя репозитория не меняется).
 
 **Canonical docs:** git submodule at `docs/` → repo `almat-mlm-docs`  
 - Tech spec: `docs/TECH_SPEC.md`  
@@ -29,22 +30,25 @@ Compensation plan and money paths are data-driven and append-only.
    (ADR-0003).
 4. **Новый NuGet** вне allow-list в `docs/01_stack.md` / ADR-0004
    (особенно MediatR, AutoMapper, Hangfire).
-5. **TickerQ Dashboard без auth** — `WithBasicAuth` (или эквивалент)
-   обязателен на всех окружениях; публичный дашборд запрещён.
+5. **Quartz Dashboard без auth** — Basic Auth / admin `[Authorize]` обязателен
+   на всех окружениях; публичный дашборд запрещён.
 
 ## Stack (pilot)
 
 - **KISS + YAGNI + OSS** (ADR-0004) — BCL/Microsoft first.
-- Controllers + services + EF Core + Npgsql, **TickerQ** (EF / Postgres +
-  SignalR-дашборд с Basic Auth), **Mapster** для DTO.
-- **Не ставить на старте:** MediatR, AutoMapper, Hangfire, Quartz.NET,
+- Controllers + services + EF Core + Npgsql, **Quartz.NET** (Postgres JobStore +
+  OSS dashboard под ASP.NET Basic Auth / admin policy), **Mapster** для DTO.
+- **Не ставить на старте:** MediatR, AutoMapper, Hangfire, TickerQ,
   MassTransit/Kafka, Redis.
 
 ## Config
 
 - Postgres: `ConnectionStrings__Default` (env / user-secrets) — не хардкодить
   прод-строку в `appsettings.json`.
-- TickerQ dashboard password: `TickerQ__Dashboard__Password`.
+- Quartz dashboard: `Quartz__Dashboard__Username` / `Quartz__Dashboard__Password`
+  (или эквивалент Basic Auth middleware).
+- FreedomPay: `FreedomPay__MerchantId`, `FreedomPay__SecretKey`,
+  `FreedomPay__ApiBaseUrl` — см. `docs/04_payments.md`.
 
 ## Knowledge graphs
 

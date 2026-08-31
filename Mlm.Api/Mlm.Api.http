@@ -1,0 +1,6 @@
+@mlm_api_HostAddress = http://localhost:5108
+
+GET {{mlm_api_HostAddress}}/health
+Accept: application/json
+
+###
