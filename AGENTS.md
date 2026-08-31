@@ -5,7 +5,7 @@ Repo / local folder: `almat-mlm-api` (имя репозитория не мен�
 
 **Canonical docs:** git submodule at `docs/` → repo `almat-mlm-docs`  
 - Tech spec: `docs/TECH_SPEC.md`  
-- Domain: `docs/0*.md` · DDL: `docs/db/schema.sql` · API: `docs/api-contracts/endpoints.md`  
+- Domain: `docs/0*.md` · CTE: `docs/db/queries_recursive.sql` · API: `docs/api-contracts/endpoints.md`  
 - ADRs: `docs/adr/` (read before changing architecture)  
 - MVP deploy: `docs/09_mvp_deployment.md`
 
@@ -22,22 +22,27 @@ Compensation plan and money paths are data-driven and append-only.
 
 Агент **останавливается и спрашивает**, прежде чем:
 
-1. **EF Core миграции / схема БД** — любые изменения `docs/db/schema.sql`, entity
-   configs, `dotnet ef migrations add|remove`.
+1. **EF Core миграции / схема БД** — `dotnet ef migrations add|remove`
+   (контекст `AppDbContext` или `QuartzDbContext`). Не править сгенерированный
+   SQL руками, кроме vendor-скрипта Quartz. Накат — `DbMigrator` при старте,
+   не руками в проде. Схема = сущности (ADR-0005).
 2. **Логика BonusEngine (денежные расчёты)** — только после закрытия
    `docs/07_open_questions.md` и явного OK.
 3. **`bonus_rules.config_json`** — не хардкодить проценты/пороги в коде
    (ADR-0003).
 4. **Новый NuGet** вне allow-list в `docs/01_stack.md` / ADR-0004
    (особенно MediatR, AutoMapper, Hangfire).
-5. **Quartz Dashboard без auth** — Basic Auth / admin `[Authorize]` обязателен
-   на всех окружениях; публичный дашборд запрещён.
+5. **Quartz.Dashboard без `AuthorizationPolicy`** — policy `QuartzDashboard`
+   (Basic scheme + роль `SchedulerAdmin`) обязательна на всех окружениях;
+   публичный дашборд запрещён. Не снимать `options.AuthorizationPolicy`.
 
 ## Stack (pilot)
 
 - **KISS + YAGNI + OSS** (ADR-0004) — BCL/Microsoft first.
-- Controllers + services + EF Core + Npgsql, **Quartz.NET** (Postgres JobStore +
-  OSS dashboard под ASP.NET Basic Auth / admin policy), **Mapster** для DTO.
+- Controllers + services + EF Core code-first + Npgsql, **Quartz.NET**
+  (`QuartzDbContext` + Dashboard под policy `QuartzDashboard`), **Mapster**,
+  **Scalar.AspNetCore**. JSON: System.Text.Json (не Newtonsoft).
+  Конфиг — Options pattern (`IOptions<T>` + ValidateOnStart), не сырой `IConfiguration` в сервисах.
 - **Не ставить на старте:** MediatR, AutoMapper, Hangfire, TickerQ,
   MassTransit/Kafka, Redis.
 
@@ -45,8 +50,11 @@ Compensation plan and money paths are data-driven and append-only.
 
 - Postgres: `ConnectionStrings__Default` (env / user-secrets) — не хардкодить
   прод-строку в `appsettings.json`.
-- Quartz dashboard: `Quartz__Dashboard__Username` / `Quartz__Dashboard__Password`
-  (или эквивалент Basic Auth middleware).
+- JWT: `Jwt__Issuer` / `Jwt__Audience` / `Jwt__SigningKey` /
+  `Jwt__AccessTokenMinutes` / `Jwt__RefreshTokenDays`.
+- Quartz.Dashboard: `Quartz__Dashboard__Username` / `Quartz__Dashboard__Password`
+  (Basic scheme для policy `QuartzDashboard`; ValidateOnStart).
+- OpenAPI/Scalar: `OpenApi__Enabled` / `OpenApi__Title` (в Development включено).
 - FreedomPay: `FreedomPay__MerchantId`, `FreedomPay__SecretKey`,
   `FreedomPay__ApiBaseUrl` — см. `docs/04_payments.md`.
 

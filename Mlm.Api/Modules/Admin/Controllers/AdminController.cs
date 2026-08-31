@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Mlm.Api.Infrastructure.Http;
 
 namespace Mlm.Api.Modules.Admin.Controllers;
 
-[ApiController]
-[Route("api/v1/[controller]")]
-[Authorize]
-public sealed class AdminController : ControllerBase
+public sealed class AdminController : ApiControllerBase
 {
     [HttpGet]
     [AllowAnonymous]

@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Mlm.Api.Infrastructure.Http;
 
 namespace Mlm.Api.Modules.Identity.Controllers;
 
-[ApiController]
-[Route("api/v1/[controller]")]
-[Authorize]
-public sealed class IdentityController : ControllerBase
+public sealed class IdentityController : ApiControllerBase
 {
     [HttpGet]
     [AllowAnonymous]

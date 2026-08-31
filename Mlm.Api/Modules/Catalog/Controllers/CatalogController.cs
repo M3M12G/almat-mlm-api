@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Mlm.Api.Infrastructure.Http;
 
 namespace Mlm.Api.Modules.Catalog.Controllers;
 
-[ApiController]
-[Route("api/v1/[controller]")]
-[Authorize]
-public sealed class CatalogController : ControllerBase
+public sealed class CatalogController : ApiControllerBase
 {
     [HttpGet]
     [AllowAnonymous]
